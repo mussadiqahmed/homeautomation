@@ -23,11 +23,9 @@
 
       return (
         <div class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
-          <div
-            class={`px-6 py-3 rounded-lg shadow-lg text-white flex items-center ${
+          <div class={`px-6 py-3 rounded-lg shadow-lg text-white flex items-center ${
               type === 'success' ? 'bg-green-500' : 'bg-red-500'
-            }`}
-          >
+            }`}>
             <span class="mr-2 text-xl">{type === 'success' ? '✅' : '❌'}</span>
             <span class="text-sm md:text-base">{message}</span>
           </div>
@@ -55,38 +53,20 @@
           <form onSubmit={handleSubmit}>
             <div class="mb-4">
               <label class="block text-gray-700">Username</label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                class="w-full px-3 py-2 border rounded"
-                required
-              />
+              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)}
+                     class="w-full px-3 py-2 border rounded" required />
             </div>
             <div class="mb-4">
               <label class="block text-gray-700">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                class="w-full px-3 py-2 border rounded"
-                required
-              />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                     class="w-full px-3 py-2 border rounded" required />
             </div>
-            <button
-              type="submit"
-              class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
-            >
+            <button type="submit"
+                    class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
               Login
             </button>
           </form>
-          {popup && (
-            <Popup
-              message={popup.message}
-              type={popup.type}
-              onClose={() => setPopup(null)}
-            />
-          )}
+          {popup && <Popup message={popup.message} type={popup.type} onClose={() => setPopup(null)} />}
         </div>
       );
     }
@@ -98,12 +78,8 @@
             <span class="text-2xl mr-4">{icon}</span>
             <span class="font-medium">{name}</span>
           </div>
-          <button
-            onClick={onToggle}
-            class={`px-4 py-2 rounded ${
-              state ? 'bg-green-500' : 'bg-red-500'
-            } text-white`}
-          >
+          <button onClick={onToggle}
+                  class={`px-4 py-2 rounded ${state ? 'bg-green-500' : 'bg-red-500'} text-white`}>
             {state ? 'ON' : 'OFF'}
           </button>
         </div>
@@ -131,17 +107,15 @@
 
         try {
           const device = await navigator.bluetooth.requestDevice({
-            acceptAllDevices: true,
-            optionalServices: ['battery_service', 'device_information']
+            filters: [
+              { namePrefix: 'ESP' }, // 🟡 Change to match your actual device name prefix
+              { services: ['battery_service'] } // 🟡 Replace with your actual UUIDs
+            ]
           });
 
           const server = await device.gatt.connect();
-          const services = await server.getPrimaryServices();
-
-          // For demo, try using the first service and get any characteristic
-          const service = services[0];
-          const chars = await service.getCharacteristics();
-          const char = chars[0];
+          const service = await server.getPrimaryService('battery_service'); // 🟡 Change if needed
+          const char = (await service.getCharacteristics())[0];
 
           setBluetoothDevice(device);
           setCharacteristic(char);
@@ -154,7 +128,7 @@
           });
         } catch (error) {
           setPopup({
-            message: error.message.includes('User cancelled')
+            message: error?.message?.includes('User cancelled')
               ? 'Bluetooth selection cancelled'
               : `Failed to connect: ${error.message}`,
             type: 'danger',
@@ -226,46 +200,22 @@
             )}
           </div>
 
-          <DeviceButton
-            name="Light"
-            icon="💡"
-            state={deviceStates.light}
-            onToggle={() => toggleDevice('light')}
-          />
-          <DeviceButton
-            name="Fan"
-            icon="🌀"
-            state={deviceStates.fan}
-            onToggle={() => toggleDevice('fan')}
-          />
-          <DeviceButton
-            name="Night Lamp"
-            icon="🛏️"
-            state={deviceStates.nightLamp}
-            onToggle={() => toggleDevice('nightLamp')}
-          />
+          <DeviceButton name="Light" icon="💡" state={deviceStates.light}
+                        onToggle={() => toggleDevice('light')} />
+          <DeviceButton name="Fan" icon="🌀" state={deviceStates.fan}
+                        onToggle={() => toggleDevice('fan')} />
+          <DeviceButton name="Night Lamp" icon="🛏️" state={deviceStates.nightLamp}
+                        onToggle={() => toggleDevice('nightLamp')} />
 
           <div class="mt-4 flex justify-between">
-            <button
-              class="bg-green-600 text-white px-4 py-2 rounded"
-              onClick={() => toggleAll(true)}
-            >
-              All ON
-            </button>
-            <button
-              class="bg-red-600 text-white px-4 py-2 rounded"
-              onClick={() => toggleAll(false)}
-            >
-              All OFF
-            </button>
+            <button class="bg-green-600 text-white px-4 py-2 rounded"
+                    onClick={() => toggleAll(true)}>All ON</button>
+            <button class="bg-red-600 text-white px-4 py-2 rounded"
+                    onClick={() => toggleAll(false)}>All OFF</button>
           </div>
 
           {popup && (
-            <Popup
-              message={popup.message}
-              type={popup.type}
-              onClose={() => setPopup(null)}
-            />
+            <Popup message={popup.message} type={popup.type} onClose={() => setPopup(null)} />
           )}
         </div>
       );
